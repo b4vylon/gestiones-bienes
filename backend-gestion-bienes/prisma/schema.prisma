@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Entidad {
+  id             Int       @id @default(autoincrement())
+  nombre         String
+  direccion      String?
+  distrito       String?
+  corregimiento  String?
+  usuarios       Usuario[]
+  bienes         Bien[]
+
+  @@map("entidades")
+}
+
+model Usuario {
+  id                Int       @id @default(autoincrement())
+  nombre            String
+  correo            String    @unique
+  contraseña_hash   String
+  rol               String
+  entidad_id        Int
+  entidad           Entidad   @relation(fields: [entidad_id], references: [id])
+  movimientos       HistorialMovimiento[]
+
+  @@map("usuarios")
+}
+
+model CategoriaBien {
+  id          Int     @id @default(autoincrement())
+  nombre      String
+  descripcion String?
+  bienes      Bien[]
+
+  @@map("categorias_bienes")
+}
+
+model Bien {
+  id                  Int      @id @default(autoincrement())
+  codigo_interno      String   @unique
+  descripcion         String
+  fecha_adquisicion   DateTime?
+  valor               Float?
+  estado              String
+  ubicacion_actual    String?
+  responsable_actual  String?
+  entidad_id          Int
+  categoria_id        Int
+  entidad             Entidad       @relation(fields: [entidad_id], references: [id])
+  categoria           CategoriaBien @relation(fields: [categoria_id], references: [id])
+  movimientos         HistorialMovimiento[]
+  creado_en           DateTime      @default(now())
+
+  @@map("bienes")
+}
+
+model HistorialMovimiento {
+  id                Int      @id @default(autoincrement())
+  bien_id           Int
+  tipo_movimiento   String
+  descripcion       String?
+  fecha_movimiento  DateTime @default(now())
+  realizado_por     Int
+  bien              Bien     @relation(fields: [bien_id], references: [id])
+  usuario           Usuario  @relation(fields: [realizado_por], references: [id])
+
+  @@map("historial_movimientos")
+}
